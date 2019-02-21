@@ -22,20 +22,16 @@ function useCalculator(defaultValue = 0) {
     // prettier-ignore
     switch (operator) {
       // ⚠ Note: each command returns an `undo` command
-      case '+': return () => { setValue(value + operand); return () => setValue(value - operand) };
-      case '-': return () => { setValue(value - operand); return () => setValue(value + operand) };
-      case '*': return () => { setValue(value * operand); return () => setValue(value / operand) };
-      case '/': return () => { setValue(value / operand); return () => setValue(value * operand) };
+      case '+': return () => { log(`+.value=${value}`); setValue(value + operand); return () => { log(`-.value=${value}`); setValue(value - operand) }; };
+      case '-': return () => { log(`-.value=${value}`); setValue(value - operand); return () => { log(`+.value=${value}`); setValue(value + operand) }; };
+      case '*': return () => { log(`*.value=${value}`); setValue(value * operand); return () => { log(`/.value=${value}`); setValue(value / operand) }; };
+      case '/': return () => { log(`/.value=${value}`); setValue(value / operand); return () => { log(`*.value=${value}`); setValue(value * operand) }; };
       default: throw new Error(`Operator ${operator} is not supported`);
     }
   };
 
   function operate(operator, operand) {
-    log(
-      `executing ${value} ${operator} ${operand} & history count => ${
-        history.length
-      }`
-    );
+    log(`operate ${value}${operator}${operand} & h => ${history.length + 1}`);
     const command = buildCommand(operator, operand);
     // execute and get the undo command handle
     setHistory(
@@ -52,6 +48,8 @@ function useCalculator(defaultValue = 0) {
     // I ain't using `forEach`, so sue me.
     for (let i = 0; i < count; i++) {
       if (commandIndex - i < 0) break;
+
+      log(`undo[${i}] ${commandIndex} of ${history.length}`, history[i].undo);
       history[i].undo();
     }
 
@@ -63,8 +61,9 @@ function useCalculator(defaultValue = 0) {
     log(`Redoing ${count} times...`);
     // I ain't using `forEach`, so sue me.
     for (let i = 0; i < count; i++) {
-      log(`Redo ${commandIndex} of ${history.length}`);
       if (i >= commandIndex) break;
+
+      log(`Redo ${commandIndex} of ${history.length}`, history[i].run);
       history[i].run();
     }
 
@@ -72,14 +71,14 @@ function useCalculator(defaultValue = 0) {
     setCommandIndex(Math.min(history.length, commandIndex + count));
   }
 
-  React.useEffect(() => log(`Current value = ${value}`));
+  React.useEffect(() => log(`✔ Current value = ${value}`));
 
   return { calculator: { operate, redo, undo }, value, history, commandIndex };
 }
 
 function App() {
   const { calculator, value, history, commandIndex } = useCalculator(100);
-  const [operand, setOperand] = React.useState(5);
+  const [operand, setOperand] = React.useState(10);
 
   const undo = e => {
     e.preventDefault();
