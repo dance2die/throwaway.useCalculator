@@ -7,8 +7,8 @@ import "./styles.css";
 const log = console.log;
 
 // Command pattern to emulator calculator
-function useCalculator() {
-  const [value, setValue] = React.useState(0);
+function useCalculator(defaultValue = 0) {
+  const [value, setValue] = React.useState(defaultValue);
   // Current command index
   const [commandIndex, setCommandIndex] = React.useState(0);
   const [history, setHistory] = React.useState([]);
@@ -70,8 +70,8 @@ function useCalculator() {
 }
 
 function App() {
-  const { calculator, value } = useCalculator();
-  const [operand, setOperand] = React.useState(0);
+  const { calculator, value } = useCalculator(100);
+  const [operand, setOperand] = React.useState(5);
 
   const undo = e => {
     e.preventDefault();
