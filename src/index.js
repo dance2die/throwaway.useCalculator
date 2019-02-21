@@ -1,10 +1,15 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import produce from "immer";
+import styled from "styled-components";
 
 import "./styles.css";
 
 const log = console.log;
+
+const Section = styled.section`
+  margin: 1em;
+`;
 
 // Command pattern to emulator calculator
 function useCalculator(defaultValue = 0) {
@@ -43,6 +48,7 @@ function useCalculator(defaultValue = 0) {
   }
 
   function undo(count) {
+    log(`undoing ${count} times...`);
     // I ain't using `forEach`, so sue me.
     for (let i = 0; i < count; i++) {
       if (commandIndex - i < 0) break;
@@ -54,23 +60,25 @@ function useCalculator(defaultValue = 0) {
   }
 
   function redo(count) {
+    log(`Redoing ${count} times...`);
     // I ain't using `forEach`, so sue me.
     for (let i = 0; i < count; i++) {
+      log(`Redo ${commandIndex} of ${history.length}`);
       if (i >= commandIndex) break;
       history[i].run();
     }
 
     // It's not a good idea to update a state in a loop so do it in one shot at the end.
-    setCommandIndex(Math.max(commandIndex, count));
+    setCommandIndex(Math.min(history.length, commandIndex + count));
   }
 
   React.useEffect(() => log(`Current value = ${value}`));
 
-  return { calculator: { operate, redo, undo }, value };
+  return { calculator: { operate, redo, undo }, value, history, commandIndex };
 }
 
 function App() {
-  const { calculator, value } = useCalculator(100);
+  const { calculator, value, history, commandIndex } = useCalculator(100);
   const [operand, setOperand] = React.useState(5);
 
   const undo = e => {
@@ -93,11 +101,11 @@ function App() {
       <header>
         <h1>Calculator Hook</h1>
       </header>
-      <section>
+      <Section>
         <h2>Current Value</h2>
         <p>{value}</p>
-      </section>
-      <section>
+      </Section>
+      <Section>
         <form>
           <input
             id="add"
@@ -105,18 +113,23 @@ function App() {
             onChange={e => setOperand(e.target.value)}
             type="number"
           />
-          <section>
+          <Section>
             <button onClick={e => operate(e, "+")}>➕ Add</button>
             <button onClick={e => operate(e, "-")}>➖ Subtract</button>
             <button onClick={e => operate(e, "*")}>❌ Multiply</button>
             <button onClick={e => operate(e, "/")}>➗ Divide</button>
-          </section>
-          <section>
+          </Section>
+          <Section>
             <button onClick={undo}>Undo Once</button>
             <button onClick={redo}>Redo Once</button>
-          </section>
+          </Section>
+          <Section>
+            <label>
+              Command Index: {commandIndex} out of {history.length}
+            </label>
+          </Section>
         </form>
-      </section>
+      </Section>
     </div>
   );
 }
